@@ -1,0 +1,64 @@
+CREATE TABLE my_products (
+    id NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR2(100),
+    description VARCHAR2(500)
+);
+
+INSERT INTO my_products (name, description) 
+VALUES ('Nike Shoes', 'Comfortable running shoes for athletes');
+
+INSERT INTO my_products (name, description) 
+VALUES ('Sony Headphone', 'Noise cancelling wireless headphone');
+
+INSERT INTO my_products (name, description) 
+VALUES ('Adidas Cap', 'Sports cap for outdoor activities');
+COMMIT;
+
+--vector column
+ALTER TABLE my_products ADD (embedding VECTOR(768));
+
+--CREATEING AI EMBEDDIN DATA 
+UPDATE MY_PRODUCTS
+    SET EMBEDDING=TO_VECTOR(VECTOR_EMBEDDING(
+        ALL_MINILM_L12_V2 USING DESCRIPTION AS DATA
+    ))
+    WHERE EMBEDDING IS NULL;
+    COMMIT;
+
+--QUERY
+SELECT 
+    name,
+    description,
+    VECTOR_DISTANCE(
+        embedding,
+        VECTOR_EMBEDDING(ALL_MINILM_L12_V2 
+        USING 'I want something for exercise' AS data),
+        COSINE
+    ) AS similarity_score
+FROM my_products
+ORDER BY similarity_score ASC
+FETCH FIRST 3 ROWS ONLY; 
+
+
+SELECT MODEL_NAME, MINING_FUNCTION, ALGORITHM 
+FROM ALL_MINING_MODELS;
+
+SELECT * FROM ALL_MINING_MODELS 
+WHERE ALGORITHM = 'ONNX';
+
+SELECT * FROM SESSION_PRIVS 
+WHERE PRIVILEGE LIKE '%MINING%';
+
+--load ai model 
+GRANT CREATE MINING MODEL TO AI;
+GRANT SELECT ANY MINING MODEL TO AI;
+GRANT EXECUTE ON DBMS_VECTOR TO AI;
+GRANT EXECUTE ON DBMS_VECTOR_CHAIN TO AI;
+COMMIT;
+exit;
+
+
+SELECT MODEL_NAME 
+FROM ALL_MINING_MODELS;
+
+select * from my_products;
